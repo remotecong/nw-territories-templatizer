@@ -1,6 +1,6 @@
 import io
 import pytest
-from src.territory_loader import load_territories, load_addresses, get_territory_filename
+from src.territory_loader import load_territories, load_addresses, get_territory_filename, get_territory_display_name
 
 def test_load_territories():
     csv_data = (
@@ -42,3 +42,13 @@ def test_get_territory_filename_without_area():
 
     terr2 = {"CategoryCode": "R", "Number": "5", "Area": "None"}
     assert get_territory_filename(terr2) == "R5.xlsx"
+
+def test_get_territory_display_name():
+    terr1 = {"CategoryCode": "A", "Number": "12", "Area": "Crown Chase Apts"}
+    assert get_territory_display_name(terr1) == "A12 - Crown Chase Apts"
+
+    terr2 = {"CategoryCode": "R", "Number": "5", "Area": ""}
+    assert get_territory_display_name(terr2) == "R5"
+
+    terr3 = {"CategoryCode": "R", "Number": "5", "Area": "None"}
+    assert get_territory_display_name(terr3) == "R5"

@@ -1,5 +1,5 @@
 import pytest
-from src.address_processor import process_territory_addresses, shorten_street
+from src.address_processor import process_territory_addresses, shorten_street, count_unique_addresses
 
 def test_shorten_street():
     assert shorten_street("East 108th Avenue") == "E 108th Ave"
@@ -54,3 +54,30 @@ def test_groups_spelling_variations_under_shortened_name():
     result = process_territory_addresses(rows)
     assert list(result.keys()) == ["E Eagle Dr"]
     assert len(result["E Eagle Dr"]) == 2
+
+def test_count_unique_addresses_empty():
+    assert count_unique_addresses([]) == 0
+
+def test_count_unique_addresses_standalone_and_duplicates():
+    rows = [
+        {"Number": "9414", "Street": "South Winston Avenue East", "TerritoryAddressApartmentID": "", "ApartmentNumber": "", "Name": "", "Phone": ""},
+        {"Number": "9414", "Street": "South Winston Avenue East", "TerritoryAddressApartmentID": "", "ApartmentNumber": "", "Name": "", "Phone": ""},
+        {"Number": "9416", "Street": "South Winston Avenue East", "TerritoryAddressApartmentID": "", "ApartmentNumber": "", "Name": "", "Phone": ""},
+    ]
+    # 9414 is duplicated, so 2 unique addresses total
+    assert count_unique_addresses(rows) == 2
+
+def test_count_unique_addresses_with_apartments():
+    rows = [
+        # Building header row (should not be counted separately when apartments exist)
+        {"Number": "2935", "Street": "East 94th Pl", "TerritoryAddressApartmentID": "", "ApartmentNumber": "", "Name": "", "Phone": ""},
+        # Apartment units
+        {"Number": "2935", "Street": "East 94th Pl", "TerritoryAddressApartmentID": "1", "ApartmentNumber": "101", "Name": "", "Phone": ""},
+        {"Number": "2935", "Street": "East 94th Pl", "TerritoryAddressApartmentID": "2", "ApartmentNumber": "102", "Name": "", "Phone": ""},
+        # Duplicate apartment unit
+        {"Number": "2935", "Street": "East 94th Pl", "TerritoryAddressApartmentID": "3", "ApartmentNumber": "102", "Name": "", "Phone": ""},
+        # Standalone house
+        {"Number": "2900", "Street": "East 94th Pl", "TerritoryAddressApartmentID": "", "ApartmentNumber": "", "Name": "", "Phone": ""},
+    ]
+    # 2935 #101, 2935 #102, 2900 -> 3 unique addresses total
+    assert count_unique_addresses(rows) == 3

@@ -103,3 +103,13 @@ def process_territory_addresses(rows: list[dict]) -> dict[str, list[dict]]:
         )
 
     return dict(sorted(streets.items(), key=lambda x: x[0].lower()))
+
+def count_unique_addresses(rows: list[dict]) -> int:
+    """Returns the count of unique formatted addresses for a territory."""
+    street_data = process_territory_addresses(rows)
+    unique_addrs = {
+        entry["address"]
+        for records in street_data.values()
+        for entry in records
+    }
+    return len(unique_addrs)

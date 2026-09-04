@@ -66,3 +66,12 @@ def get_territory_filename(terr: dict) -> str:
     clean_area = re.sub(r'[\\/*?:\"<>|]', '-', area)
     clean_area = re.sub(r'-+', '-', clean_area).strip(' -')
     return f"{cat_code}{num} - {clean_area}.xlsx"
+
+def get_territory_display_name(terr: dict) -> str:
+    """Generates a display name (e.g. 'A12 - Crown Chase Apts' or 'R5')."""
+    cat_code = terr.get("CategoryCode", "").strip()
+    num = terr.get("Number", "").strip()
+    area = terr.get("Area", "").strip()
+    if not area or area.lower() in ("none", "null", "nil"):
+        return f"{cat_code}{num}"
+    return f"{cat_code}{num} - {area}"

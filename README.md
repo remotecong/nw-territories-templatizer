@@ -50,12 +50,17 @@ pip install openpyxl pytest
    - `Cedar Ridge Territories.csv`
    - `Cedar Ridge Territory Addresses.csv`
 
-2. Run the generator script:
+2. Run the generator script to create Excel workbooks:
    ```bash
    python generate_sheets.py
    ```
+   Generated `.xlsx` files will be saved in the `output/` directory (e.g., `output/A12 - Crown Chase Apts.xlsx`, `output/R5.xlsx`). Territories with no address rows are automatically skipped.
 
-3. Generated `.xlsx` files will be saved in the `output/` directory (e.g., `output/A12 - Crown Chase Apts.xlsx`, `output/R5.xlsx`). Territories with no address rows are automatically skipped.
+3. Alternatively, generate a summary CSV of territory address counts:
+   ```bash
+   python count_addresses.py
+   ```
+   This generates `output/territory_address_counts.csv` with a header row `Territory,Address Count` and each territory (including its area designation if present) alongside its unique address count.
 
 ---
 
