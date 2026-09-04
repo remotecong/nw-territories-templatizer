@@ -18,9 +18,10 @@ def generate_territory_counts(
     output_source: Union[str, Path, TextIO],
 ) -> int:
     """
-    Generates a CSV listing each territory with its unique address count.
+    Generates a CSV listing territories side-by-side by category (R, G, A),
+    each with Territory and Address Count columns separated by a blank column.
     Skipping territories with zero addresses.
-    Returns the count of territory rows written.
+    Returns the total count of territory rows included.
     """
     if isinstance(output_source, (str, Path)):
         output_path = Path(output_source)
@@ -33,26 +34,70 @@ def generate_territory_counts(
 
     try:
         writer = csv.writer(f)
-        writer.writerow(["Territory", "Address Count"])
 
-        sorted_territories = sorted(territories.values(), key=_territory_sort_key)
-        rows_written = 0
+        # Primary categories in order: R, G, A, followed by any extras
+        known_categories = ["R", "G", "A"]
+        extra_categories = sorted(
+            {
+                terr.get("CategoryCode", "").strip()
+                for terr in territories.values()
+                if terr.get("CategoryCode", "").strip()
+                and terr.get("CategoryCode", "").strip() not in known_categories
+                and addresses_by_tid.get(terr.get("TerritoryID", "").strip())
+            }
+        )
+        categories_order = known_categories + extra_categories
 
-        for terr in sorted_territories:
-            tid = terr.get("TerritoryID", "").strip()
-            addr_rows = addresses_by_tid.get(tid, [])
-            if not addr_rows:
-                continue
+        category_items: dict[str, list[tuple[str, int]]] = {}
+        total_territories_count = 0
 
-            count = count_unique_addresses(addr_rows)
-            if count == 0:
-                continue
+        for cat in categories_order:
+            cat_terrs = [
+                t for t in territories.values()
+                if t.get("CategoryCode", "").strip() == cat
+            ]
+            cat_terrs.sort(key=lambda t: _sort_key(t.get("Number", "").strip()))
 
-            display_name = get_territory_display_name(terr)
-            writer.writerow([display_name, count])
-            rows_written += 1
+            items = []
+            for terr in cat_terrs:
+                tid = terr.get("TerritoryID", "").strip()
+                addr_rows = addresses_by_tid.get(tid, [])
+                if not addr_rows:
+                    continue
 
-        return rows_written
+                count = count_unique_addresses(addr_rows)
+                if count == 0:
+                    continue
+
+                display_name = get_territory_display_name(terr)
+                items.append((display_name, count))
+                total_territories_count += 1
+
+            category_items[cat] = items
+
+        # Build header row: Territory, Address Count, "", Territory, Address Count, ...
+        header = []
+        for i, _ in enumerate(categories_order):
+            if i > 0:
+                header.append("")
+            header.extend(["Territory", "Address Count"])
+        writer.writerow(header)
+
+        # Build data rows
+        max_rows = max((len(items) for items in category_items.values()), default=0)
+        for row_idx in range(max_rows):
+            row = []
+            for i, cat in enumerate(categories_order):
+                if i > 0:
+                    row.append("")  # Spacer column
+                items = category_items[cat]
+                if row_idx < len(items):
+                    row.extend([items[row_idx][0], items[row_idx][1]])
+                else:
+                    row.extend(["", ""])
+            writer.writerow(row)
+
+        return total_territories_count
     finally:
         if should_close:
             f.close()

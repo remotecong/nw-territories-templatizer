@@ -8,7 +8,9 @@ def test_generate_territory_counts():
         "1": {"TerritoryID": "1", "CategoryCode": "A", "Number": "12", "Area": "Crown Chase Apts"},
         "2": {"TerritoryID": "2", "CategoryCode": "A", "Number": "2", "Area": "Bandon Trails"},
         "3": {"TerritoryID": "3", "CategoryCode": "R", "Number": "5", "Area": ""},
-        "4": {"TerritoryID": "4", "CategoryCode": "R", "Number": "99", "Area": "Empty Area"},
+        "4": {"TerritoryID": "4", "CategoryCode": "R", "Number": "1", "Area": "North Oak"},
+        "5": {"TerritoryID": "5", "CategoryCode": "G", "Number": "1", "Area": "Riverbend"},
+        "6": {"TerritoryID": "6", "CategoryCode": "R", "Number": "99", "Area": "Empty Area"},
     }
     addresses_by_tid = {
         "1": [
@@ -22,17 +24,25 @@ def test_generate_territory_counts():
             {"Number": "50", "Street": "Oak Ave", "TerritoryAddressApartmentID": "", "ApartmentNumber": "", "Name": "", "Phone": ""},
             {"Number": "50", "Street": "Oak Ave", "TerritoryAddressApartmentID": "", "ApartmentNumber": "", "Name": "", "Phone": ""},
         ],
+        "4": [
+            {"Number": "10", "Street": "First St", "TerritoryAddressApartmentID": "", "ApartmentNumber": "", "Name": "", "Phone": ""},
+        ],
+        "5": [
+            {"Number": "500", "Street": "River Rd", "TerritoryAddressApartmentID": "", "ApartmentNumber": "", "Name": "", "Phone": ""},
+        ],
     }
 
     out = io.StringIO()
-    written_count = generate_territory_counts(territories, addresses_by_tid, out)
+    total_territories = generate_territory_counts(territories, addresses_by_tid, out)
 
-    assert written_count == 3
+    assert total_territories == 5
     out.seek(0)
     reader = list(csv.reader(out))
-    
-    assert reader[0] == ["Territory", "Address Count"]
-    assert reader[1] == ["A2 - Bandon Trails", "1"]
-    assert reader[2] == ["A12 - Crown Chase Apts", "2"]
-    assert reader[3] == ["R5", "1"]
-    assert len(reader) == 4
+
+    # Header row with R, G, A sections separated by empty column
+    assert reader[0] == ["Territory", "Address Count", "", "Territory", "Address Count", "", "Territory", "Address Count"]
+    # Row 1
+    assert reader[1] == ["R1 - North Oak", "1", "", "G1 - Riverbend", "1", "", "A2 - Bandon Trails", "1"]
+    # Row 2 (G is exhausted, so its cells are empty)
+    assert reader[2] == ["R5", "1", "", "", "", "", "A12 - Crown Chase Apts", "2"]
+    assert len(reader) == 3

@@ -60,7 +60,13 @@ pip install openpyxl pytest
    ```bash
    python count_addresses.py
    ```
-   This generates `output/territory_address_counts.csv` with a header row `Territory,Address Count` and each territory (including its area designation if present) alongside its unique address count.
+   This generates `output/territory_address_counts.csv` organized into side-by-side columns by category:
+   - **Cols A-B**: `R` territories (`Territory`, `Address Count`)
+   - **Col C**: Blank separator
+   - **Cols D-E**: `G` territories (`Territory`, `Address Count`)
+   - **Col F**: Blank separator
+   - **Cols G-H**: `A` territories (`Territory`, `Address Count`)
+   Each section has the `Territory,Address Count` header repeated above it.
 
 ---
 
